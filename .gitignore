@@ -1,0 +1,56 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+build/
+dist/
+.pytest_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Model weights and large binaries
+*.pth
+*.pt
+*.bin
+*.ckpt
+*.safetensors
+
+# Data
+train/
+test/
+test_other/
+test_y/
+test_res/
+test_another/
+data/
+*.nii
+*.nii.gz
+
+# Logs and outputs
+runs/
+logs/
+*.log
+train_visual_res/
+
+# Generated artefacts
+*_masks/
+*_failure_export/
+*_failure_export_*/
+*_seg_results.json
+test_segmamba/
+test_umamba/
+train_unetr/
