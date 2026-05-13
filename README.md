@@ -77,18 +77,37 @@ falls back to a pure-PyTorch implementation when those kernels are unavailable.
 
 ## Data Preparation
 
-The default loaders expect the PAS dataset to be organised as:
+The anonymized PAS MRI dataset is hosted on Hugging Face:
+**[ChipYTY/PASD](https://huggingface.co/datasets/ChipYTY/PASD)** (244 cases,
+~4.6 GB). Each case directory contains exactly one MRI volume and one binary
+lesion mask:
 
 ```
-train/                            # training cases
-├── 001-<case-name>-tra-<label>/  # the trailing digit encodes the class label
-│   ├── <case>.nii.gz             # MRI volume (>= 18-char filename)
-│   └── <case>-mask.nii.gz        # GT segmentation mask
-├── 002-...
-test/                             # test cases (same layout)
-test_other/                       # predicted masks used by dataset_class.py
+train/                                 # 184 training cases
+├── PASD_00001_1/                      # trailing digit = class label (0 / 1)
+│   ├── PASD_00001_1_image.nii.gz      # MRI volume   (filename length >= 18)
+│   └── mask.nii.gz                    # GT segmentation mask
+├── PASD_00002_1/
+│   └── ...
+└── PASD_00184_1/
+test/                                  # 60 test cases (same layout)
+test_other/                            # predicted masks (produced by `test_seg.py`)
 ```
 
+Download the dataset and place it next to the code:
+
+```python
+from huggingface_hub import snapshot_download
+
+snapshot_download(
+    repo_id="ChipYTY/PASD",
+    repo_type="dataset",
+    local_dir=".",
+    allow_patterns=["train/**", "test/**"],
+)
+```
+
+The dataloaders read `train/` and `test/` from the current working directory.
 Volumes are resampled to `48 x 256 x 256` and intensity-clipped to `[0, 1650]`
 before normalisation. See `dataset.py` / `dataset_class.py` for details.
 
@@ -109,33 +128,37 @@ Download `sam_vit_b_01ec64.pth` from the
 and place it at the repository root. The PASD weights will be released separately;
 please contact the authors if you need them in advance.
 
-## Training
+## End-to-end Pipeline
 
-Train the segmentation model:
+1. **Train segmentation** on `train/`:
 
-```bash
-python train_seg.py
-```
+   ```bash
+   python train_seg.py
+   ```
 
-Train the classification head on masked MRI:
+2. **Predict lesion masks** for *all* cases and dump them to `test_other/`
+   (this is what `dataset_class.py` consumes):
 
-```bash
-python train_class.py
-```
+   ```bash
+   # produces test_other/<case_id>.nii.gz for the test split
+   PASD_PRED_DIR=test_other python test_seg.py
+   ```
 
-## Evaluation
+   Re-run with the dataloader pointed at `train/` to also generate masks for
+   the training set if you intend to train the classifier on predicted masks.
 
-Segmentation evaluation reports Dice, IoU, accuracy, specificity and sensitivity:
+3. **Train the classifier** on `train/` × predicted masks:
 
-```bash
-python test_seg.py
-```
+   ```bash
+   python train_class.py
+   ```
 
-Classification evaluation reports overall accuracy:
+4. **Evaluate**:
 
-```bash
-python test_class.py
-```
+   ```bash
+   python test_seg.py     # Dice / IoU / Specificity / Sensitivity
+   python test_class.py   # overall accuracy
+   ```
 
 ## Citation
 

@@ -67,17 +67,13 @@ class ToTensor(object):
         return image, mask
 
 class Data(Dataset):
-    def __init__(self,mode='train'):
-        self.img_path = 'train'
-       
-       
-        self.randomflip = RandomFlip()
-      
-        #self.resize1     = cv2.resize((352, 352), interpolation=cv2.INTER_NEAREST)
-        self.totensor   = ToTensor()
-        #self.normalize = Normalize(mean=415.24713, std=511.48914)
-        self.samples = os.listdir(self.img_path)
+    def __init__(self, mode='train'):
         self.mode = mode
+        self.img_path = mode
+
+        self.randomflip = RandomFlip()
+        self.totensor = ToTensor()
+        self.samples = sorted(os.listdir(self.img_path))
 
 
 

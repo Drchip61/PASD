@@ -68,18 +68,16 @@ class ToTensor(object):
 
 
 class Data(Dataset):
-    def __init__(self,mode='train'):
-        self.img_path = mode
-        self.mask_path = 'test_other'
-       
-       
-        self.randomflip = RandomFlip()
-      
-        #self.resize1     = cv2.resize((352, 352), interpolation=cv2.INTER_NEAREST)
-        self.totensor   = ToTensor()
-        #self.normalize = Normalize(mean=415.24713, std=511.48914)
-        self.samples = os.listdir(self.img_path)
+    def __init__(self, mode='train', mask_path='test_other'):
         self.mode = mode
+        self.img_path = mode
+        # Directory containing predicted lesion masks (one `<case_id>.nii.gz` per case)
+        # produced by `test_seg.py`. Used to multiply the MRI before classification.
+        self.mask_path = mask_path
+
+        self.randomflip = RandomFlip()
+        self.totensor = ToTensor()
+        self.samples = sorted(os.listdir(self.img_path))
 
 
 

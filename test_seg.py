@@ -65,10 +65,12 @@ def dice(x, y):
 
 test_loader = DataLoader(data, shuffle=False, batch_size=1)
 
-outPath = 'train_visual_res'
+# Predicted mask directory. `dataset_class.py` defaults to reading from
+# `test_other/` for the second-stage classifier, so keep the names aligned.
+outPath = os.environ.get('PASD_PRED_DIR', 'test_other')
 if os.path.exists(outPath):
     shutil.rmtree(outPath)
-os.mkdir(outPath)
+os.makedirs(outPath, exist_ok=True)
 deal = nn.Softmax(dim=1)
 
 class cal_mae(object):
@@ -126,7 +128,7 @@ with torch.no_grad():
         nii_image = nib.Nifti1Image(np_data, np.eye(4))  # 使用单位矩阵作为仿射矩阵
 
 # 保存为 NIfTI 文件
-        nib.save(nii_image, os.path.join(outPath, label_name+'.nii'))
+        nib.save(nii_image, os.path.join(outPath, label_name+'.nii.gz'))
 
         print("Tensor数据已保存为"+label_name+".nii")
         #print(label.max())
